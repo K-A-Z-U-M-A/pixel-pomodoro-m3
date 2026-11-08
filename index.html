@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-palette="iris">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#121218" id="meta-theme-color" />
+  <title>25:00 · Concentración</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='22' fill='%23D0BCFF'/%3E%3Ccircle cx='32' cy='34' r='17' fill='none' stroke='%2321005D' stroke-width='5.5'/%3E%3Cpath d='M32 24v10l7 5' fill='none' stroke='%2321005D' stroke-width='5.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M25 11h14' stroke='%2321005D' stroke-width='5.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Custom Photo Background & Expressive Ambient Layer -->
+  <div id="custom-bg-layer" class="custom-bg-layer" aria-hidden="true"></div>
+  <div class="m3-ambient-blobs" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <canvas id="ambient-canvas" class="ambient-canvas" aria-hidden="true"></canvas>
+
+  <!-- Main App Shell -->
+  <div class="app-shell">
+    <!-- Top App Bar (Pixel Material 3 Expressive) -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <div class="pixel-pill greeting-pill" id="greeting-pill">
+          <span class="greeting-dot" id="status-dot"></span>
+          <span id="greeting-text">Buenas tardes</span>
+        </div>
+        <button class="quote-chip" id="btn-edit-quote" type="button" title="Haz clic para personalizar tu frase de enfoque">
+          <span id="quote-text">“Concéntrate en un paso a la vez.”</span>
+          <span class="ms-icon icon-sm" aria-hidden="true">edit</span>
+        </button>
+      </div>
+
+      <!-- Expressive Status Badges & Quick Actions -->
+      <div class="top-bar-right">
+        <!-- Daily Streak Badge (M3 Cookie Expressive Shape) -->
+        <button class="expressive-badge badge-streak" id="btn-open-stats" type="button" title="Estadísticas de concentración y calendario">
+          <span class="badge-shape-icon cookie-shape" aria-hidden="true">
+            <span class="ms-icon icon-filled">local_fire_department</span>
+          </span>
+          <span class="badge-content">
+            <strong id="streak-count">0</strong>
+            <small>días</small>
+          </span>
+        </button>
+
+        <!-- Daily Challenge Badge -->
+        <button class="expressive-badge badge-challenge" id="btn-open-challenge" type="button" title="Reto diario de concentración">
+          <span class="badge-shape-icon clover-shape" aria-hidden="true">
+            <span class="ms-icon icon-filled">trophy</span>
+          </span>
+          <span class="badge-content">
+            <strong id="challenge-badge-text">Meta 2h</strong>
+          </span>
+        </button>
+
+        <!-- Action Icon Buttons (Google Pixel Quick Settings Tile Pill) -->
+        <div class="top-icon-group">
+          <button class="m3-icon-btn" id="btn-open-music" type="button" title="Música de YouTube Music y Sonido Ambiental" aria-label="Música y sonido ambiental">
+            <span class="ms-icon" aria-hidden="true">headphones</span>
+            <span class="playing-indicator" id="music-indicator" hidden></span>
+          </button>
+
+          <button class="m3-icon-btn" id="btn-pip" type="button" title="Mini ventana flotante (Picture-in-Picture)" aria-label="Mini ventana flotante">
+            <span class="ms-icon" aria-hidden="true">picture_in_picture_alt</span>
+          </button>
+
+          <button class="m3-icon-btn" id="btn-open-appearance" type="button" title="Apariencia y Material You" aria-label="Apariencia">
+            <span class="ms-icon" aria-hidden="true">palette</span>
+          </button>
+
+          <button class="m3-icon-btn" id="btn-open-settings" type="button" title="Ajustes del temporizador" aria-label="Ajustes">
+            <span class="ms-icon" aria-hidden="true">tune</span>
+          </button>
+
+          <button class="m3-icon-btn" id="btn-fullscreen" type="button" title="Pantalla completa (F)" aria-label="Pantalla completa">
+            <span class="ms-icon" aria-hidden="true" id="fullscreen-icon">fullscreen</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Grid: Timer Centerpiece + Expandable Tasks Panel -->
+    <main class="workspace-grid" id="workspace-grid">
+      <!-- Centerpiece: Pixel Material 3 Expressive Timer Card -->
+      <section class="timer-stage" aria-label="Temporizador Pomodoro">
+        <!-- Segmented Expressive Mode Switch -->
+        <nav class="m3-mode-segmented" role="tablist" aria-label="Modo de sesión">
+          <button class="mode-tab active" role="tab" aria-selected="true" data-mode="focus" id="tab-focus" type="button">
+            <span class="ms-icon icon-sm" aria-hidden="true">timer</span>
+            <span class="mode-tab-label">Concentración</span>
+            <span class="mode-tab-badge" id="count-focus">0</span>
+          </button>
+          <button class="mode-tab" role="tab" aria-selected="false" data-mode="short" id="tab-short" type="button">
+            <span class="ms-icon icon-sm" aria-hidden="true">coffee</span>
+            <span class="mode-tab-label">Descanso corto</span>
+            <span class="mode-tab-badge" id="count-short">0</span>
+          </button>
+          <button class="mode-tab" role="tab" aria-selected="false" data-mode="long" id="tab-long" type="button">
+            <span class="ms-icon icon-sm" aria-hidden="true">self_improvement</span>
+            <span class="mode-tab-label">Descanso largo</span>
+            <span class="mode-tab-badge" id="count-long">0</span>
+          </button>
+        </nav>
+
+        <!-- Active Task Pill Banner -->
+        <div class="active-task-banner" id="active-task-banner">
+          <button class="active-task-pill" id="btn-focus-task-chip" type="button" title="Abrir panel de tareas">
+            <span class="ms-icon icon-sm icon-filled task-pill-icon" aria-hidden="true">track_changes</span>
+            <span class="task-pill-text" id="active-task-title">Sin tarea activa · Toca para elegir una</span>
+            <span class="task-pill-time" id="active-task-live-time" hidden>0m</span>
+          </button>
+          <button class="clear-active-task-btn" id="btn-clear-active-task" type="button" title="Desvincular tarea actual" hidden aria-label="Quitar tarea activa">
+            <span class="ms-icon icon-sm" aria-hidden="true">close</span>
+          </button>
+        </div>
+
+        <!-- Dial Container (Supports "Ring" and "Pixel Expressive Giant" styles) -->
+        <div class="dial-wrapper" id="dial-wrapper" data-dial-style="ring">
+          <!-- SVG Expressive Ring -->
+          <svg class="dial-svg" viewBox="0 0 340 340" aria-hidden="true">
+            <defs>
+              <linearGradient id="m3RingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="var(--md-sys-color-primary)" />
+                <stop offset="100%" stop-color="var(--md-sys-color-tertiary)" />
+              </linearGradient>
+            </defs>
+            <!-- Background Track -->
+            <circle class="dial-track" cx="170" cy="170" r="144" />
+            <!-- Progress Arc -->
+            <circle class="dial-progress" id="dial-progress-circle" cx="170" cy="170" r="144" />
+            <!-- Expressive Thumb Indicator -->
+            <circle class="dial-thumb" id="dial-thumb" cx="170" cy="26" r="9" />
+          </svg>
+
+          <!-- Center Time Display -->
+          <div class="dial-center">
+            <div class="mode-chip-inline" id="dial-mode-subtitle">
+              <span class="scallop-dot"></span>
+              <span id="dial-subtitle-text">Sesión 1 de 4</span>
+            </div>
+
+            <div class="time-readout" id="time-readout" role="timer" aria-live="off">
+              <span class="time-mm" id="time-mm">25</span><span class="time-colon" id="time-colon">:</span><span class="time-ss" id="time-ss">00</span>
+            </div>
+
+            <!-- Cycle Stepper Dots (4 Pomodoros per Long Break) -->
+            <div class="cycle-dots" id="cycle-dots" title="Progreso hacia el descanso largo (4 pomodoros)">
+              <span class="cycle-dot" data-step="1"></span>
+              <span class="cycle-dot" data-step="2"></span>
+              <span class="cycle-dot" data-step="3"></span>
+              <span class="cycle-dot" data-step="4"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Time Adjusters (+1 min / +5 min Pixel Clock style) -->
+        <div class="quick-adjust-row">
+          <button class="tonal-chip-btn" id="btn-minus-1m" type="button" title="Restar 1 minuto">-1 min</button>
+          <button class="tonal-chip-btn" id="btn-plus-1m" type="button" title="Añadir 1 minuto (+1 min)">+1 min</button>
+          <button class="tonal-chip-btn" id="btn-plus-5m" type="button" title="Añadir 5 minutos (+5 min)">+5 min</button>
+        </div>
+
+        <!-- Pixel Material 3 Expressive Control Dock (Morphing Play/Pause CTA) -->
+        <div class="control-dock">
+          <button class="dock-secondary-btn" id="btn-reset" type="button" title="Reiniciar sesión (R)" aria-label="Reiniciar sesión">
+            <span class="ms-icon" aria-hidden="true">restart_alt</span>
+          </button>
+
+          <button class="m3-morph-cta" id="btn-start-pause" type="button" data-running="false" aria-label="Iniciar o pausar">
+            <span class="cta-icon" id="cta-icon">
+              <span class="ms-icon icon-lg icon-filled" aria-hidden="true">play_arrow</span>
+            </span>
+            <span class="cta-label" id="cta-label">Iniciar</span>
+          </button>
+
+          <button class="dock-secondary-btn" id="btn-stop-skip" type="button" title="Terminar o saltar sesión (S)" aria-label="Terminar sesión">
+            <span class="ms-icon icon-filled" aria-hidden="true" id="stop-skip-icon">skip_next</span>
+          </button>
+        </div>
+
+        <!-- Partial Session Hint (50% threshold info) -->
+        <p class="session-hint" id="session-hint">
+          Atajos: <kbd>Espacio</kbd> Iniciar/Pausar · <kbd>R</kbd> Reiniciar · <kbd>T</kbd> Tareas
+        </p>
+
+        <!-- Bottom Floating Dock to Toggle Tasks Drawer on Compact Layout -->
+        <div class="bottom-bar-actions">
+          <button class="m3-tonal-pill-btn" id="btn-toggle-tasks" type="button">
+            <span class="ms-icon icon-sm" aria-hidden="true">checklist</span>
+            <span>Tareas y Proyectos</span>
+            <span class="pill-counter" id="tasks-pending-badge">0</span>
+          </button>
+
+          <button class="m3-tonal-pill-btn" id="btn-toggle-dial-style" type="button" title="Cambiar entre Anillo Expresivo y Reloj Pixel Gigante">
+            <span class="ms-icon icon-sm" aria-hidden="true">schedule</span>
+            <span id="dial-style-btn-text">Vista: Anillo</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Right Side Column: Music block (top) + Tasks block (bottom) -->
+      <div class="side-column" id="side-column">
+        <!-- Floating YouTube Music Pixel Media Player Card (M3 Expressive) -->
+        <div class="ytm-floating-dock" id="ytm-floating-dock" hidden>
+          <div class="ytm-media-main">
+            <!-- Squircle Artwork Thumbnail -->
+            <div class="ytm-artwork-wrap" id="ytm-artwork-wrap">
+              <img id="ytm-artwork-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%232e2a3f'/%3E%3C/svg%3E" alt="Carátula" />
+              <span class="ytm-eq-badge" id="ytm-eq-badge" title="Reproduciendo">
+                <span class="ms-icon icon-xs-sym icon-filled">graphic_eq</span>
+              </span>
+            </div>
+
+            <!-- Track Info & Source Pill -->
+            <div class="ytm-meta-col">
+              <div class="ytm-source-badge">
+                <span class="ms-icon icon-xs-sym icon-filled ytm-red-icon" style="font-size:14px">music_video</span>
+                <span id="ytm-source-label">YouTube Music</span>
+              </div>
+              <strong class="ytm-track-title" id="ytm-dock-title">Cargando pista…</strong>
+              <span class="ytm-track-artist" id="ytm-dock-artist">Playlist acoplada</span>
+            </div>
+
+            <!-- Pixel Media Transport Controls -->
+            <div class="ytm-transport">
+              <button type="button" class="ytm-ctrl-btn" id="btn-ytm-prev" title="Pista anterior">
+                <span class="ms-icon icon-sm icon-filled">skip_previous</span>
+              </button>
+              <button type="button" class="ytm-play-pill" id="btn-ytm-playpause" data-playing="true" title="Reproducir / Pausar música">
+                <span class="ms-icon icon-sm icon-filled" id="ytm-playpause-icon">pause</span>
+              </button>
+              <button type="button" class="ytm-ctrl-btn" id="btn-ytm-next" title="Siguiente pista">
+                <span class="ms-icon icon-sm icon-filled">skip_next</span>
+              </button>
+              <button type="button" class="ytm-ctrl-btn ytm-queue-toggle" id="btn-ytm-queue" title="Elegir pista de la playlist">
+                <span class="ms-icon icon-sm">queue_music</span>
+                <span class="ytm-queue-count" id="ytm-queue-count" hidden>0</span>
+              </button>
+              <button type="button" class="ytm-ctrl-btn" id="btn-ytm-close" title="Cerrar reproductor">
+                <span class="ms-icon icon-xs-sym">close</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Expandable M3 Expressive Track Selector Drawer -->
+          <div class="ytm-tracklist-drawer" id="ytm-tracklist-drawer" hidden>
+            <div class="ytm-drawer-header">
+              <span class="ytm-drawer-title">
+                <span class="ms-icon icon-xs-sym icon-filled">playlist_play</span>
+                <span id="ytm-drawer-subtitle">Pistas de la playlist</span>
+              </span>
+              <div class="ytm-drawer-actions">
+                <button type="button" class="task-btn-mini" id="btn-ytm-shuffle" title="Mezclar orden">
+                  <span class="ms-icon icon-xs-sym" style="vertical-align:middle">shuffle</span> Aleatorio
+                </button>
+                <button type="button" class="task-btn-mini" id="btn-ytm-toggle-video" title="Mostrar/Ocultar lienzo de vídeo original">
+                  <span class="ms-icon icon-xs-sym" style="vertical-align:middle">movie</span> Vídeo
+                </button>
+              </div>
+            </div>
+            <div class="ytm-track-items" id="ytm-track-items"></div>
+          </div>
+
+          <!-- Hidden / Optional Video Stage for YT IFrame Player API -->
+          <div class="ytm-iframe-wrap" id="ytm-iframe-wrap">
+            <div id="ytm-api-mount"></div>
+          </div>
+        </div>
+
+
+        <!-- Empty Music Card (shown while no YouTube Music source is docked) -->
+        <div class="ytm-empty-card" id="ytm-empty-card">
+          <span class="ytm-empty-icon cookie-shape" aria-hidden="true">
+            <span class="ms-icon icon-filled">music_note</span>
+          </span>
+          <div class="ytm-empty-text">
+            <strong>Música</strong>
+            <small>Conecta una playlist de YouTube Music o usa el sonido ambiental</small>
+          </div>
+          <button type="button" class="m3-tonal-btn" id="btn-empty-open-music">
+            <span class="ms-icon icon-sm">add</span> Conectar
+          </button>
+        </div>
+
+        <!-- Tasks & Subtasks Side Panel (M3 Surface Container Card) -->
+        <aside class="tasks-panel" id="tasks-panel" aria-label="Gestor de tareas y proyectos">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Tareas</h2>
+              <p class="panel-subtitle" id="tasks-summary-text">0 pendientes · 0m registrados hoy</p>
+            </div>
+            <div class="panel-header-actions">
+              <button class="m3-icon-btn sm" id="btn-manage-labels" type="button" title="Gestionar etiquetas">
+                <span class="ms-icon icon-sm" aria-hidden="true">label</span>
+              </button>
+              <button class="m3-icon-btn sm" id="btn-close-tasks" type="button" title="Ocultar panel de tareas" aria-label="Cerrar tareas">
+                <span class="ms-icon icon-sm" aria-hidden="true">close</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Add Task Form -->
+          <form class="task-create-form" id="form-create-task">
+            <div class="task-input-row">
+              <input type="text" id="input-task-title" class="m3-input" placeholder="¿En qué vas a concentrarte?" maxlength="140" required autocomplete="off" />
+              <button type="submit" class="m3-fab-sm" title="Añadir tarea" aria-label="Añadir tarea">
+                <span class="ms-icon" aria-hidden="true">add</span>
+              </button>
+            </div>
+            <div class="task-meta-row">
+              <select id="input-task-priority" class="m3-select-chip" aria-label="Prioridad">
+                <option value="medium">Prioridad Media</option>
+                <option value="high">Alta prioridad</option>
+                <option value="low">Baja prioridad</option>
+              </select>
+              <select id="input-task-label" class="m3-select-chip" aria-label="Etiqueta">
+                <option value="">Sin etiqueta</option>
+              </select>
+              <input type="date" id="input-task-due" class="m3-select-chip" aria-label="Fecha límite" title="Fecha límite (opcional)" />
+            </div>
+          </form>
+
+          <!-- Search & Filter Bar -->
+          <div class="task-filter-bar">
+            <div class="filter-pills" role="tablist">
+              <button type="button" class="filter-pill active" data-filter="all">Todas</button>
+              <button type="button" class="filter-pill" data-filter="todo">Pendientes</button>
+              <button type="button" class="filter-pill" data-filter="done">Completadas</button>
+            </div>
+            <input type="search" id="input-task-search" class="m3-search-sm" placeholder="Buscar..." aria-label="Buscar tarea" />
+          </div>
+
+          <!-- Hierarchical Task List -->
+          <div class="task-tree-list" id="task-tree-list"></div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODALS & SHEETS (M3 Expressive Dialogs)                                -->
+  <!-- ====================================================================== -->
+
+  <!-- 1. YouTube Music & Ambient Sound Synthesizer Modal -->
+  <dialog class="m3-dialog dialog-lg" id="modal-music">
+    <div class="dialog-header">
+      <div>
+        <h3 class="dialog-title">Música y Sonido Ambiental</h3>
+        <p class="dialog-subtitle">Conecta tu música de YouTube Music o usa el sintetizador WebAudio Pixel</p>
+      </div>
+      <button class="m3-icon-btn sm" data-close-dialog="modal-music" type="button" aria-label="Cerrar">
+        <span class="ms-icon icon-sm">close</span>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <!-- SECTION A: YouTube Music Integration -->
+      <div class="ytm-integration-card">
+        <div class="ytm-card-head">
+          <span class="ms-icon icon-filled ytm-red-icon">music_video</span>
+          <div>
+            <strong>Conectar YouTube Music / YouTube</strong>
+            <small>Pega el enlace de cualquier playlist, álbum, canción o radio en vivo de <code>music.youtube.com</code></small>
+          </div>
+        </div>
+
+        <div class="task-input-row">
+          <input
+            type="url"
+            id="input-ytm-url"
+            class="m3-input"
+            placeholder="https://music.youtube.com/playlist?list=PL... o watch?v=..."
+          />
+          <button type="button" class="m3-filled-btn" id="btn-load-ytm">
+            <span class="ms-icon icon-sm icon-filled" style="vertical-align:middle">play_arrow</span>
+            Cargar en el Dock
+          </button>
+        </div>
+
+        <!-- Quick Curated YouTube Music Focus Stations & Playlists -->
+        <div class="ytm-presets-row">
+          <span class="ytm-preset-label">Playlists y Radios:</span>
+          <button type="button" class="tonal-chip-btn ytm-quick-btn" data-ytm-url="https://music.youtube.com/playlist?list=PLofht4PTcKYnaH8w5olJCI-wUVxuoMHqM" data-ytm-name="Lofi Girl · Study Beats Playlist">
+            <span class="ms-icon icon-xs-sym icon-filled">queue_music</span> Playlist Lofi Study
+          </button>
+          <button type="button" class="tonal-chip-btn ytm-quick-btn" data-ytm-url="https://music.youtube.com/watch?v=jfKfPfyJRdk" data-ytm-name="Lofi Girl · Beats to Study/Relax">
+            <span class="ms-icon icon-xs-sym icon-filled">radio</span> Lofi Girl 24/7
+          </button>
+          <button type="button" class="tonal-chip-btn ytm-quick-btn" data-ytm-url="https://music.youtube.com/watch?v=4xDzrJKXOOY" data-ytm-name="Synthwave Radio · Chill & Coding">
+            <span class="ms-icon icon-xs-sym icon-filled">spatial_audio</span> Synthwave Coding
+          </button>
+          <button type="button" class="tonal-chip-btn" id="btn-open-ytm-popup" title="Abrir music.youtube.com en una mini-ventana acoplada con tu sesión iniciada">
+            <span class="ms-icon icon-xs-sym">open_in_new</span> Mi biblioteca YT Music
+          </button>
+        </div>
+      </div>
+
+      <hr class="m3-divider" />
+
+      <!-- SECTION B: Offline Pixel WebAudio Ambient Synthesizer -->
+      <span class="input-label">Sintetizador WebAudio integrado (100% local, puedes mezclarlo con tu música de fondo)</span>
+      <div class="sound-preset-grid" id="sound-preset-grid">
+        <button type="button" class="sound-card active" data-sound="lofi">
+          <span class="ms-icon icon-filled sound-pixel-icon">piano</span>
+          <strong>Lo-Fi Cálido + Vinilo</strong>
+          <small>Progresión de acordes + crepitar</small>
+        </button>
+        <button type="button" class="sound-card" data-sound="rain">
+          <span class="ms-icon icon-filled sound-pixel-icon">rainy</span>
+          <strong>Lluvia Suave</strong>
+          <small>Ruido rosa filtrado relajante</small>
+        </button>
+        <button type="button" class="sound-card" data-sound="brown">
+          <span class="ms-icon icon-filled sound-pixel-icon">waves</span>
+          <strong>Ruido Marrón Profundo</strong>
+          <small>Aislamiento acústico para enfoque</small>
+        </button>
+        <button type="button" class="sound-card" data-sound="binaural">
+          <span class="ms-icon icon-filled sound-pixel-icon">graphic_eq</span>
+          <strong>Drone Alfa (10 Hz)</strong>
+          <small>Armónicos espaciales de concentración</small>
+        </button>
+      </div>
+
+      <div class="music-controls-box">
+        <button type="button" class="m3-filled-btn full-width" id="btn-toggle-ambient">
+          <span id="ambient-play-label">Reproducir sonido ambiental</span>
+        </button>
+
+        <div class="slider-group">
+          <label for="slider-ambient-volume">
+            <span>Volumen del sintetizador ambiental</span>
+            <strong id="ambient-volume-val">40%</strong>
+          </label>
+          <input type="range" id="slider-ambient-volume" class="m3-slider" min="0" max="100" value="40" />
+        </div>
+
+        <label class="m3-switch-row">
+          <span>Activar sonido ambiental automáticamente al iniciar Concentración</span>
+          <input type="checkbox" id="chk-auto-ambient" class="m3-switch" />
+        </label>
+      </div>
+
+      <div class="custom-stream-box">
+        <label class="input-label" for="input-custom-audio">O enlace directo de radio / audio (.mp3 / .ogg / Icecast):</label>
+        <div class="task-input-row">
+          <input type="url" id="input-custom-audio" class="m3-input" placeholder="https://ejemplo.com/stream.mp3" />
+          <button type="button" class="m3-tonal-btn" id="btn-use-custom-audio">Reproducir URL</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 2. Focus Statistics & Monthly Calendar Heatmap Modal -->
+  <dialog class="m3-dialog dialog-lg" id="modal-stats">
+    <div class="dialog-header">
+      <div>
+        <h3 class="dialog-title">Actividad de Concentración</h3>
+        <p class="dialog-subtitle">Un día cuenta para la racha al alcanzar al menos 15 min de enfoque</p>
+      </div>
+      <button class="m3-icon-btn sm" data-close-dialog="modal-stats" type="button" aria-label="Cerrar">
+        <span class="ms-icon icon-sm">close</span>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <div class="stats-kpi-grid">
+        <div class="kpi-card kpi-primary">
+          <span class="kpi-label"><span class="ms-icon icon-xs-sym icon-filled">local_fire_department</span> Racha actual</span>
+          <strong class="kpi-value" id="stat-current-streak">0 días</strong>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label"><span class="ms-icon icon-xs-sym icon-filled">workspace_premium</span> Mejor racha</span>
+          <strong class="kpi-value" id="stat-best-streak">0 días</strong>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label"><span class="ms-icon icon-xs-sym icon-filled">schedule</span> Hoy</span>
+          <strong class="kpi-value" id="stat-today-time">0m</strong>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label"><span class="ms-icon icon-xs-sym icon-filled">calendar_month</span> Total del mes</span>
+          <strong class="kpi-value" id="stat-month-time">0h 0m</strong>
+        </div>
+      </div>
+
+      <!-- Calendar Header -->
+      <div class="calendar-Toolbar">
+        <button type="button" class="m3-icon-btn sm" id="btn-cal-prev" aria-label="Mes anterior">
+          <span class="ms-icon icon-sm">chevron_left</span>
+        </button>
+        <h4 class="calendar-month-label" id="calendar-month-label">Noviembre 2026</h4>
+        <button type="button" class="m3-icon-btn sm" id="btn-cal-next" aria-label="Mes siguiente">
+          <span class="ms-icon icon-sm">chevron_right</span>
+        </button>
+      </div>
+
+      <div class="calendar-weekdays">
+        <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+
+      <!-- Selected Day Breakdown -->
+      <div class="selected-day-card" id="selected-day-card">
+        <strong id="selected-day-title">Hoy</strong>
+        <span id="selected-day-details">0 sesiones · 0 minutos de concentración</span>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 3. Daily Challenge & Reward Modal -->
+  <dialog class="m3-dialog" id="modal-challenge">
+    <div class="dialog-header">
+      <div>
+        <h3 class="dialog-title">Reto Diario de Concentración</h3>
+        <p class="dialog-subtitle">Define tu objetivo diario y desbloquea curiosidades al lograrlo</p>
+      </div>
+      <button class="m3-icon-btn sm" data-close-dialog="modal-challenge" type="button" aria-label="Cerrar">
+        <span class="ms-icon icon-sm">close</span>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <div class="challenge-progress-card">
+        <div class="challenge-progress-header">
+          <span id="challenge-status-pill" class="status-pill">Activo</span>
+          <span id="challenge-completed-total">0 retos superados</span>
+        </div>
+        <div class="challenge-big-progress">
+          <strong id="challenge-progress-text">0m / 2h 00m</strong>
+          <small id="challenge-remaining-text">Faltan 2h 00m hoy</small>
+        </div>
+        <div class="m3-linear-progress">
+          <div class="m3-linear-bar" id="challenge-progress-bar" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="challenge-config-grid">
+        <div>
+          <label class="input-label" for="select-challenge-hours">Horas</label>
+          <select id="select-challenge-hours" class="m3-input">
+            <option value="0">0 h</option>
+            <option value="1">1 h</option>
+            <option value="2" selected>2 h</option>
+            <option value="3">3 h</option>
+            <option value="4">4 h</option>
+            <option value="5">5 h</option>
+            <option value="6">6 h</option>
+            <option value="8">8 h</option>
+          </select>
+        </div>
+        <div>
+          <label class="input-label" for="select-challenge-minutes">Minutos</label>
+          <select id="select-challenge-minutes" class="m3-input">
+            <option value="0" selected>00 min</option>
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dialog-actions-row">
+        <button type="button" class="m3-filled-btn" id="btn-save-challenge">Activar / Actualizar Reto</button>
+        <button type="button" class="m3-tonal-btn" id="btn-show-fact">
+          <span class="ms-icon icon-sm icon-filled">auto_awesome</span> Ver dato curioso
+        </button>
+      </div>
+
+      <!-- Curiosity / Reward Card -->
+      <div class="curiosity-card" id="curiosity-card">
+        <span class="curiosity-tag"><span class="ms-icon icon-xs-sym icon-filled">lightbulb</span> ¿Sabías que...?</span>
+        <p id="curiosity-text">El cerebro humano consume alrededor del 20% de la energía total del cuerpo a pesar de representar solo el 2% de su peso.</p>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 4. Pixel Material 3 Expressive Appearance Modal -->
+  <dialog class="m3-dialog" id="modal-appearance">
+    <div class="dialog-header">
+      <div>
+        <h3 class="dialog-title">Apariencia · Material 3 Expressive</h3>
+        <p class="dialog-subtitle">Paletas dinámicas e iconos estilo Google Pixel</p>
+      </div>
+      <button class="m3-icon-btn sm" data-close-dialog="modal-appearance" type="button" aria-label="Cerrar">
+        <span class="ms-icon icon-sm">close</span>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <div class="section-block">
+        <span class="input-label">Tema de iluminación</span>
+        <div class="segmented-row">
+          <button type="button" class="seg-btn active" data-theme-choice="dark">
+            <span class="ms-icon icon-xs-sym icon-filled">dark_mode</span> Oscuro Pixel
+          </button>
+          <button type="button" class="seg-btn" data-theme-choice="light">
+            <span class="ms-icon icon-xs-sym icon-filled">light_mode</span> Claro Expresivo
+          </button>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <span class="input-label">Paleta Material You</span>
+        <div class="palette-swatches" id="palette-swatches">
+          <button type="button" class="swatch-btn active" data-palette-choice="iris" title="Pixel Iris / Lavanda">
+            <span class="swatch-circle" style="background: linear-gradient(135deg, #D0BCFF 50%, #CCC2DC 50%)"></span>
+            <small>Iris</small>
+          </button>
+          <button type="button" class="swatch-btn" data-palette-choice="sage" title="Pixel Salvia / Esmeralda">
+            <span class="swatch-circle" style="background: linear-gradient(135deg, #86D993 50%, #B8CCB8 50%)"></span>
+            <small>Salvia</small>
+          </button>
+          <button type="button" class="swatch-btn" data-palette-choice="coral" title="Pixel Coral / Rosa">
+            <span class="swatch-circle" style="background: linear-gradient(135deg, #FFB3B6 50%, #F4B8E4 50%)"></span>
+            <small>Coral</small>
+          </button>
+          <button type="button" class="swatch-btn" data-palette-choice="ocean" title="Pixel Océano / Cielo">
+            <span class="swatch-circle" style="background: linear-gradient(135deg, #89CEFF 50%, #B4C8E8 50%)"></span>
+            <small>Océano</small>
+          </button>
+          <button type="button" class="swatch-btn" data-palette-choice="amber" title="Pixel Ámbar / Limoncello">
+            <span class="swatch-circle" style="background: linear-gradient(135deg, #F9BD48 50%, #E6C48D 50%)"></span>
+            <small>Ámbar</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <span class="input-label">Estilo del Reloj</span>
+        <div class="segmented-row">
+          <button type="button" class="seg-btn active" data-dial-choice="ring">
+            <span class="ms-icon icon-xs-sym">motion_photos_on</span> Anillo Expresivo
+          </button>
+          <button type="button" class="seg-btn" data-dial-choice="giant">
+            <span class="ms-icon icon-xs-sym">schedule</span> Tipografía Pixel Gigante
+          </button>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <span class="input-label">Partículas ambientales en pantalla</span>
+        <div class="segmented-row">
+          <button type="button" class="seg-btn active" data-ambient-choice="motes">
+            <span class="ms-icon icon-xs-sym">blur_on</span> Motas
+          </button>
+          <button type="button" class="seg-btn" data-ambient-choice="stars">
+            <span class="ms-icon icon-xs-sym">auto_awesome</span> Estrellas
+          </button>
+          <button type="button" class="seg-btn" data-ambient-choice="bubbles">
+            <span class="ms-icon icon-xs-sym">bubble_chart</span> Burbujas
+          </button>
+          <button type="button" class="seg-btn" data-ambient-choice="off">
+            <span class="ms-icon icon-xs-sym">block</span> Ninguna
+          </button>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <span class="input-label">Fondo personalizado (Imagen local opcional)</span>
+        <div class="task-input-row">
+          <label class="m3-tonal-btn file-label">
+            <span class="ms-icon icon-sm">image</span> Subir imagen
+            <input type="file" id="input-bg-file" accept="image/*" hidden />
+          </label>
+          <button type="button" class="m3-tonal-btn" id="btn-clear-bg">
+            <span class="ms-icon icon-sm">delete</span> Quitar imagen
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 5. Timer Settings & Alarms Modal -->
+  <dialog class="m3-dialog" id="modal-settings">
+    <div class="dialog-header">
+      <div>
+        <h3 class="dialog-title">Ajustes del Temporizador</h3>
+        <p class="dialog-subtitle">Duraciones, automatización y alarmas</p>
+      </div>
+      <button class="m3-icon-btn sm" data-close-dialog="modal-settings" type="button" aria-label="Cerrar">
+        <span class="ms-icon icon-sm">close</span>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <div class="duration-sliders">
+        <div class="slider-group">
+          <label for="slider-dur-focus">
+            <span>Concentración (5–90 min)</span>
+            <strong id="val-dur-focus">25 min</strong>
+          </label>
+          <input type="range" id="slider-dur-focus" class="m3-slider" min="5" max="90" step="5" value="25" />
+        </div>
+
+        <div class="slider-group">
+          <label for="slider-dur-short">
+            <span>Descanso corto (1–30 min)</span>
+            <strong id="val-dur-short">5 min</strong>
+          </label>
+          <input type="range" id="slider-dur-short" class="m3-slider" min="1" max="30" step="1" value="5" />
+        </div>
+
+        <div class="slider-group">
+          <label for="slider-dur-long">
+            <span>Descanso largo (5–45 min)</span>
+            <strong id="val-dur-long">15 min</strong>
+          </label>
+          <input type="range" id="slider-dur-long" class="m3-slider" min="5" max="45" step="5" value="15" />
+        </div>
+      </div>
+
+      <hr class="m3-divider" />
+
+      <label class="m3-switch-row">
+        <span>Iniciar descansos automáticamente</span>
+        <input type="checkbox" id="chk-auto-break" class="m3-switch" />
+      </label>
+
+      <label class="m3-switch-row">
+        <span>Iniciar sesiones de concentración automáticamente</span>
+        <input type="checkbox" id="chk-auto-focus" class="m3-switch" />
+      </label>
+
+      <label class="m3-switch-row">
+        <span>Notificaciones del navegador al terminar sesión</span>
+        <input type="checkbox" id="chk-notifications" class="m3-switch" />
+      </label>
+
+      <hr class="m3-divider" />
+
+      <div class="alarm-settings-row">
+        <div style="flex:1">
+          <label class="input-label" for="select-alarm-sound">Sonido de alarma al finalizar</label>
+          <select id="select-alarm-sound" class="m3-input">
+            <option value="chime">Carrillón Pixel</option>
+            <option value="bell">Campana Armónica</option>
+            <option value="piano">Acorde de Piano</option>
+            <option value="digital">Pulso Digital</option>
+            <option value="soft">Brisa Suave</option>
+          </select>
+        </div>
+        <button type="button" class="m3-tonal-btn" id="btn-test-alarm">
+          <span class="ms-icon icon-sm icon-filled">volume_up</span> Probar
+        </button>
+      </div>
+
+      <div class="slider-group">
+        <label for="slider-alarm-volume">
+          <span>Volumen de alarma</span>
+          <strong id="val-alarm-volume">80%</strong>
+        </label>
+        <input type="range" id="slider-alarm-volume" class="m3-slider" min="0" max="100" value="80" />
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 6. Label Manager Modal -->
+  <dialog class="m3-dialog" id="modal-labels">
+    <div class="dialog-header">
+      <div>
+        <h3 class="dialog-title">Etiquetas de Tareas</h3>
+        <p class="dialog-subtitle">Organiza tus proyectos por color</p>
+      </div>
+      <button class="m3-icon-btn sm" data-close-dialog="modal-labels" type="button" aria-label="Cerrar">
+        <span class="ms-icon icon-sm">close</span>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <form id="form-create-label" class="task-input-row">
+        <input type="text" id="input-label-name" class="m3-input" placeholder="Nueva etiqueta (ej. Estudio, Código)" maxlength="28" required />
+        <input type="color" id="input-label-color" class="color-picker-btn" value="#D0BCFF" title="Color de etiqueta" />
+        <button type="submit" class="m3-filled-btn">Crear</button>
+      </form>
+      <div class="labels-list" id="labels-list"></div>
+    </div>
+  </dialog>
+
+  <!-- Toast Notification Snackbar -->
+  <div class="m3-snackbar" id="m3-snackbar" role="status" aria-live="polite" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
